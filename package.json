@@ -1,0 +1,20 @@
+{
+  "name": "cobros-diarios",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema de Cobros Diarios - Daily Loan Collections Management",
+  "workspaces": [
+    "backend",
+    "frontend",
+    "shared"
+  ],
+  "scripts": {
+    "backend:dev": "npm run dev --workspace=backend",
+    "frontend:dev": "npm run dev --workspace=frontend",
+    "backend:build": "npm run build --workspace=backend",
+    "frontend:build": "npm run build --workspace=frontend",
+    "db:migrate": "npm run db:migrate --workspace=backend",
+    "db:seed": "npm run db:seed --workspace=backend",
+    "db:studio": "npm run db:studio --workspace=backend"
+  }
+}

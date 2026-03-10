@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cobros_postgres
+    environment:
+      POSTGRES_USER: cobros_user
+      POSTGRES_PASSWORD: cobros_dev_pass
+      POSTGRES_DB: cobros_diarios
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: cobros_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@cobros.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  pgdata:

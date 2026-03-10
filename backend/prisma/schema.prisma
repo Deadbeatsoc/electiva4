@@ -1,0 +1,350 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum TrafficLight {
+  GREEN
+  YELLOW
+  RED
+}
+
+enum LoanStatus {
+  ACTIVE
+  COMPLETED
+  RENEWED
+  DEFAULTED
+  CANCELLED
+}
+
+enum InstallmentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  PARTIAL
+}
+
+enum ShiftStatus {
+  OPEN
+  CLOSED
+  AUTO_CLOSED
+}
+
+enum NotificationType {
+  INFO
+  WARNING
+  ALERT
+  OVERDUE
+  INACTIVITY
+}
+
+// ============================================
+// AUTH & USERS
+// ============================================
+
+model User {
+  id                 String   @id @default(uuid())
+  email              String   @unique
+  password           String
+  name               String
+  phone              String
+  cedula             String?  @unique
+  isActive           Boolean  @default(true)
+  mustChangePassword Boolean  @default(false)
+  roleId             String
+  role               Role     @relation(fields: [roleId], references: [id])
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relations
+  createdClients     Client[]            @relation("ClientCreatedBy")
+  collectorLoans     Loan[]              @relation("LoanCollector")
+  payments           Payment[]
+  expenses           Expense[]
+  shifts             CashRegisterShift[]
+  notifications      Notification[]
+  auditLogs          AuditLog[]
+  rateConfigs        RateConfig[]
+
+  @@map("users")
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // Relations
+  users       User[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id     String @id @default(uuid())
+  name   String @unique
+  module String
+  action String
+
+  // Relations
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// ============================================
+// CLIENTS
+// ============================================
+
+model Client {
+  id           String       @id @default(uuid())
+  name         String
+  cedula       String       @unique
+  phone        String
+  address      String
+  email        String?
+  notes        String?
+  isActive     Boolean      @default(true)
+  rating       Int          @default(3)
+  isPunished   Boolean      @default(false)
+  trafficLight TrafficLight @default(GREEN)
+  lastContactAt DateTime    @default(now())
+  createdById  String
+  createdBy    User         @relation("ClientCreatedBy", fields: [createdById], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  // Relations
+  loans Loan[]
+
+  @@map("clients")
+}
+
+// ============================================
+// LOANS & INSTALLMENTS
+// ============================================
+
+model Loan {
+  id                String     @id @default(uuid())
+  loanNumber        String     @unique
+  clientId          String
+  client            Client     @relation(fields: [clientId], references: [id])
+  collectorId       String
+  collector         User       @relation("LoanCollector", fields: [collectorId], references: [id])
+  renewedFromLoanId String?
+  renewedFrom       Loan?      @relation("LoanRenewal", fields: [renewedFromLoanId], references: [id])
+  renewals          Loan[]     @relation("LoanRenewal")
+  principalAmount   Decimal    @db.Decimal(12, 2)
+  interestRate      Decimal    @db.Decimal(5, 2)
+  totalAmount       Decimal    @db.Decimal(12, 2)
+  installmentAmount Decimal    @db.Decimal(12, 2)
+  totalInstallments Int        @default(24)
+  paidInstallments  Int        @default(0)
+  paidAmount        Decimal    @default(0) @db.Decimal(12, 2)
+  remainingAmount   Decimal    @db.Decimal(12, 2)
+  overdueDays       Int        @default(0)
+  moraAmount        Decimal    @default(0) @db.Decimal(12, 2)
+  status            LoanStatus @default(ACTIVE)
+  disbursedAt       DateTime   @default(now())
+  expectedEndDate   DateTime
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  // Relations
+  installments Installment[]
+  payments     Payment[]
+
+  @@index([clientId])
+  @@index([collectorId])
+  @@index([status])
+  @@map("loans")
+}
+
+model Installment {
+  id       String            @id @default(uuid())
+  loanId   String
+  loan     Loan              @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  number   Int
+  amount   Decimal           @db.Decimal(12, 2)
+  dueDate  DateTime
+  status   InstallmentStatus @default(PENDING)
+  paidAt   DateTime?
+  paidAmount Decimal?        @db.Decimal(12, 2)
+
+  // Relations
+  payments Payment[]
+
+  @@unique([loanId, number])
+  @@index([dueDate])
+  @@index([status])
+  @@map("installments")
+}
+
+// ============================================
+// PAYMENTS
+// ============================================
+
+model Payment {
+  id               String   @id @default(uuid())
+  loanId           String
+  loan             Loan     @relation(fields: [loanId], references: [id])
+  installmentId    String
+  installment      Installment @relation(fields: [installmentId], references: [id])
+  collectorId      String
+  collector        User     @relation(fields: [collectorId], references: [id])
+  shiftId          String?
+  shift            CashRegisterShift? @relation(fields: [shiftId], references: [id])
+  amount           Decimal  @db.Decimal(12, 2)
+  moraAmount       Decimal  @default(0) @db.Decimal(12, 2)
+  isLate           Boolean  @default(false)
+  paymentTimestamp DateTime @default(now())
+  createdAt        DateTime @default(now())
+
+  @@index([loanId])
+  @@index([collectorId])
+  @@index([paymentTimestamp])
+  @@map("payments")
+}
+
+// ============================================
+// MORA CONFIGURATION
+// ============================================
+
+model MoraConfig {
+  id                      String   @id @default(uuid())
+  name                    String
+  dailyRate               Decimal  @db.Decimal(5, 2)
+  gracePeriodHours        Int      @default(2)
+  punishmentThresholdDays Int      @default(45)
+  isActive                Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@map("mora_configs")
+}
+
+// ============================================
+// RATE CONFIGURATION
+// ============================================
+
+model RateConfig {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  interestRate Decimal  @db.Decimal(5, 2)
+  description  String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@map("rate_configs")
+}
+
+// ============================================
+// CASH REGISTER / SHIFTS
+// ============================================
+
+model CashRegisterShift {
+  id             String      @id @default(uuid())
+  userId         String
+  user           User        @relation(fields: [userId], references: [id])
+  openedAt       DateTime    @default(now())
+  closedAt       DateTime?
+  initialAmount  Decimal     @db.Decimal(12, 2)
+  totalCollected Decimal     @default(0) @db.Decimal(12, 2)
+  totalExpenses  Decimal     @default(0) @db.Decimal(12, 2)
+  finalAmount    Decimal?    @db.Decimal(12, 2)
+  status         ShiftStatus @default(OPEN)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  // Relations
+  payments Payment[]
+  expenses Expense[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("cash_register_shifts")
+}
+
+// ============================================
+// EXPENSES
+// ============================================
+
+model Expense {
+  id          String             @id @default(uuid())
+  userId      String
+  user        User               @relation(fields: [userId], references: [id])
+  shiftId     String?
+  shift       CashRegisterShift? @relation(fields: [shiftId], references: [id])
+  category    String
+  amount      Decimal            @db.Decimal(12, 2)
+  description String?
+  createdAt   DateTime           @default(now())
+
+  @@index([userId])
+  @@map("expenses")
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  type      NotificationType @default(INFO)
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
+
+// ============================================
+// AUDIT LOG
+// ============================================
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  module    String
+  entityId  String?
+  oldData   Json?
+  newData   Json?
+  ipAddress String?
+  timestamp DateTime @default(now())
+
+  @@index([userId])
+  @@index([module])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
