@@ -498,7 +498,7 @@ function ExpenseModal({
 
             <div>
               <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Monto</label>
-              <input type="number" step="1000" min="1" className="placeholder:text-white/20"
+              <input type="number" step="1" min="0" className="placeholder:text-white/20"
                 {...register('amount', { valueAsNumber: true })} style={inputStyle(!!errors.amount)}
                 onFocus={(e) => { if (!errors.amount) { e.target.style.borderColor = '#3b82f6'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.15)'; } }}
                 onBlur={(e) => { e.target.style.borderColor = errors.amount ? 'rgba(248,113,113,0.5)' : 'rgba(255,255,255,0.12)'; e.target.style.boxShadow = 'none'; }}

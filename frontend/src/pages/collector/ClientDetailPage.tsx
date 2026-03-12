@@ -82,18 +82,18 @@ function formatDate(value?: string | null) {
 
 function statusStyle(status: string): React.CSSProperties {
   const s = status.toUpperCase();
-  if (s === 'ACTIVE')    return { background: 'rgba(34,197,94,0.1)',   color: '#4ade80', border: '1px solid rgba(34,197,94,0.25)'   };
-  if (s === 'COMPLETED') return { background: 'rgba(37,99,235,0.12)',  color: '#60a5fa', border: '1px solid rgba(59,130,246,0.25)'  };
-  if (s === 'RENEWED')   return { background: 'rgba(124,58,237,0.12)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.25)' };
-  if (s === 'DEFAULTED') return { background: 'rgba(239,68,68,0.1)',   color: '#f87171', border: '1px solid rgba(239,68,68,0.25)'  };
+  if (s === 'ACTIVE') return { background: 'rgba(34,197,94,0.1)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.25)' };
+  if (s === 'COMPLETED') return { background: 'rgba(37,99,235,0.12)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.25)' };
+  if (s === 'RENEWED') return { background: 'rgba(124,58,237,0.12)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.25)' };
+  if (s === 'DEFAULTED') return { background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)' };
   return { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.1)' };
 }
 
 function statusLabel(status: string) {
   const s = status.toUpperCase();
-  if (s === 'ACTIVE')    return 'Activo';
+  if (s === 'ACTIVE') return 'Activo';
   if (s === 'COMPLETED') return 'Completado';
-  if (s === 'RENEWED')   return 'Renovado';
+  if (s === 'RENEWED') return 'Renovado';
   if (s === 'DEFAULTED') return 'En mora';
   if (s === 'CANCELLED') return 'Cancelado';
   return status;
@@ -237,9 +237,9 @@ export default function ClientDetailPage() {
               {detail.name}
             </h1>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <InfoItem label="Cedula"          value={detail.cedula} />
-              <InfoItem label="Telefono"        value={detail.phone}  icon={<Phone size={14} />} />
-              <InfoItem label="Direccion"       value={detail.address} />
+              <InfoItem label="Cedula" value={detail.cedula} />
+              <InfoItem label="Telefono" value={detail.phone} icon={<Phone size={14} />} />
+              <InfoItem label="Direccion" value={detail.address} />
               <InfoItem label="Ultimo contacto" value={formatDate(detail.lastContactAt)} icon={<Clock3 size={14} />} />
             </div>
 
@@ -281,8 +281,8 @@ export default function ClientDetailPage() {
 
                 {/* Métricas */}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <MetricCard label="Total prestamo"  value={formatCurrency(detail.currentLoan.totalAmount)} />
-                  <MetricCard label="Pagado"          value={formatCurrency(detail.currentLoan.paidAmount)} />
+                  <MetricCard label="Total prestamo" value={formatCurrency(detail.currentLoan.totalAmount)} />
+                  <MetricCard label="Pagado" value={formatCurrency(detail.currentLoan.paidAmount)} />
                   <MetricCard label="Saldo pendiente" value={formatCurrency(detail.currentLoan.remainingAmount)} emphasized />
                 </div>
               </div>
@@ -374,8 +374,8 @@ export default function ClientDetailPage() {
                   </label>
                   <input
                     type="number"
-                    min="1"
-                    step="1000"
+                    min="0"
+                    step="1"
                     placeholder="Ej: 500000"
                     className="placeholder:text-white/20"
                     {...register('amount', { valueAsNumber: true })}

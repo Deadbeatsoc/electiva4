@@ -365,8 +365,8 @@ export default function PaymentsPage() {
               </label>
               <input
                 type="number"
-                min="1"
-                step="1000"
+                min="0"
+                step="1"
                 placeholder="Ej: 50000"
                 className="placeholder:text-white/20"
                 {...register('amount', { valueAsNumber: true })}
