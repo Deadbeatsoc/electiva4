@@ -12,6 +12,43 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cobros_user -d cobros_diarios"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: cobros_backend
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://cobros_user:cobros_dev_pass@postgres:5432/cobros_diarios
+      JWT_ACCESS_SECRET: change-me-to-random-64-char-string
+      JWT_REFRESH_SECRET: change-me-to-another-random-64-char-string
+      JWT_ACCESS_EXPIRY: 15m
+      JWT_REFRESH_EXPIRY: 7d
+      CORS_ORIGIN: http://localhost:5173
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: cobros_frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
     restart: unless-stopped
 
   pgadmin:
@@ -24,6 +61,8 @@ services:
       - "5050:80"
     depends_on:
       - postgres
+    profiles:
+      - tools
     restart: unless-stopped
 
 volumes:

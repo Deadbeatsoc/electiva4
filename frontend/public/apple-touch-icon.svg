@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="Cobros Diarios">
+  <rect width="180" height="180" rx="40" fill="#0f172a" />
+  <circle cx="90" cy="90" r="66" fill="#22c55e" />
+  <text
+    x="90"
+    y="102"
+    text-anchor="middle"
+    font-family="Inter, Segoe UI, Arial, sans-serif"
+    font-size="60"
+    font-weight="800"
+    fill="#ffffff"
+  >
+    CD
+  </text>
+</svg>
