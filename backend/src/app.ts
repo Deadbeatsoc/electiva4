@@ -8,6 +8,7 @@ import { errorHandler } from './middleware/error.middleware';
 import { successResponse } from './utils/response';
 
 const app = express();
+app.set('trust proxy', config.trustProxy);
 
 // ---------------------------------------------------------------------------
 // Global middleware

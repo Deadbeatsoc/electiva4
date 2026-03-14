@@ -17,7 +17,8 @@ Optional:
 - `JWT_REFRESH_EXPIRY` (default `7d`)
 - `PRISMA_SYNC_SCHEMA` (`true` by default)
 - `PRISMA_SEED` (`false` by default)
-- `BACKEND_PORT` (`3000` by default)
+- `BACKEND_PORT` (`3001` by default)
+- `TRUST_PROXY` (`1` in production is recommended)
 
 `PORT` is assigned automatically by Railway/Render.
 

@@ -1,6 +1,25 @@
+type TrustProxyConfig = boolean | number | string;
+
+const nodeEnv = process.env.NODE_ENV || 'development';
+
+const parseTrustProxy = (value: string | undefined): TrustProxyConfig => {
+  if (value === undefined || value === '') {
+    return nodeEnv === 'production' ? 1 : false;
+  }
+
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+
+  const numeric = Number(value);
+  if (!Number.isNaN(numeric)) return numeric;
+
+  return value;
+};
+
 export const config = {
   port: parseInt(process.env.PORT || '3000', 10),
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv,
+  trustProxy: parseTrustProxy(process.env.TRUST_PROXY),
   database: {
     url: process.env.DATABASE_URL || '',
   },
