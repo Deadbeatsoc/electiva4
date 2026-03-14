@@ -27,7 +27,7 @@ RUN apk add --no-cache nginx gettext
 
 ENV NODE_ENV=production
 ENV PORT=8080
-ENV BACKEND_PORT=3000
+ENV BACKEND_PORT=3001
 ENV PRISMA_SYNC_SCHEMA=true
 ENV PRISMA_SEED=false
 

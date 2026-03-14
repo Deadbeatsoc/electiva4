@@ -7,7 +7,12 @@ if [ -z "${DATABASE_URL:-}" ]; then
 fi
 
 : "${PORT:=8080}"
-: "${BACKEND_PORT:=3000}"
+: "${BACKEND_PORT:=3001}"
+
+if [ "$BACKEND_PORT" = "$PORT" ]; then
+  echo "BACKEND_PORT matches PORT ($PORT). Switching BACKEND_PORT to 3001 to avoid port conflict."
+  BACKEND_PORT=3001
+fi
 
 export NGINX_PORT="$PORT"
 export NGINX_BACKEND_PORT="$BACKEND_PORT"

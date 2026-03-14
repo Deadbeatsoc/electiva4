@@ -10,7 +10,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: BACKEND_PORT
-        value: "3000"
+        value: "3001"
       - key: PRISMA_SYNC_SCHEMA
         value: "true"
       - key: PRISMA_SEED
