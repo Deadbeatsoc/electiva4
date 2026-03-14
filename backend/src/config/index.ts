@@ -4,7 +4,7 @@ const nodeEnv = process.env.NODE_ENV || 'development';
 
 const parseTrustProxy = (value: string | undefined): TrustProxyConfig => {
   if (value === undefined || value === '') {
-    return nodeEnv === 'production' ? 1 : false;
+    return 1;
   }
 
   if (value === 'true') return true;

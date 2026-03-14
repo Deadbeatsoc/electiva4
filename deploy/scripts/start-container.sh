@@ -17,6 +17,8 @@ fi
 export NGINX_PORT="$PORT"
 export NGINX_BACKEND_PORT="$BACKEND_PORT"
 
+echo "Container network config: PORT=${PORT}, BACKEND_PORT=${BACKEND_PORT}"
+
 envsubst '${NGINX_PORT} ${NGINX_BACKEND_PORT}' \
   < /etc/nginx/templates/default.conf.template \
   > /etc/nginx/http.d/default.conf
@@ -47,13 +49,17 @@ trap cleanup INT TERM
 
 while true; do
   if ! kill -0 "$BACKEND_PID" 2>/dev/null; then
-    wait "$BACKEND_PID" || true
+    BACKEND_EXIT=0
+    wait "$BACKEND_PID" || BACKEND_EXIT=$?
+    echo "Backend process exited (code: ${BACKEND_EXIT})."
     cleanup
     exit 1
   fi
 
   if ! kill -0 "$NGINX_PID" 2>/dev/null; then
-    wait "$NGINX_PID" || true
+    NGINX_EXIT=0
+    wait "$NGINX_PID" || NGINX_EXIT=$?
+    echo "Nginx process exited (code: ${NGINX_EXIT})."
     cleanup
     exit 1
   fi
