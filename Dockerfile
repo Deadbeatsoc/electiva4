@@ -8,6 +8,7 @@ COPY backend/package*.json backend/
 COPY frontend/package*.json frontend/
 COPY shared/package*.json shared/
 COPY tsconfig.base.json ./
+COPY backend/prisma backend/prisma
 
 RUN npm ci
 
