@@ -38,6 +38,7 @@ const limiter = rateLimit({
   max: 100, // limit each IP to 100 requests per windowMs
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.path === '/health' || req.path === '/api/v1/health',
   message: { success: false, message: 'Too many requests, please try again later.' },
 });
 app.use(limiter);
