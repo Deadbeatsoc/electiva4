@@ -47,6 +47,10 @@ app.use(limiter);
 // ---------------------------------------------------------------------------
 
 // Health check
+app.get('/health', (_req, res) => {
+  successResponse(res, { status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.get('/api/v1/health', (_req, res) => {
   successResponse(res, { status: 'ok', timestamp: new Date().toISOString() });
 });
