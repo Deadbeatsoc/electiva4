@@ -3,29 +3,59 @@ import { config } from './config';
 import { logger } from './utils/logger';
 import { startCollectorJobs, stopCollectorJobs } from './modules/collector/collector.jobs';
 
-console.log('=== BACKEND STARTUP ===');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('PORT:', process.env.PORT);
-console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'SET' : 'NOT SET');
-console.log('Config port:', config.port);
+const bootTs = () => new Date().toISOString();
+const bootLog = (message: string, meta?: unknown) => {
+  if (meta === undefined) {
+    console.log(`[${bootTs()}] [backend:${process.pid}] ${message}`);
+    return;
+  }
+  console.log(`[${bootTs()}] [backend:${process.pid}] ${message}`, meta);
+};
+
+bootLog('startup begin', {
+  nodeEnv: process.env.NODE_ENV,
+  portEnv: process.env.PORT,
+  configPort: config.port,
+  databaseUrlSet: Boolean(process.env.DATABASE_URL),
+  trustProxy: config.trustProxy,
+});
 
 try {
   const server = app.listen(config.port, () => {
-    console.log(`✓ Server running on port ${config.port}`);
-    logger.info(
-      `Server running in ${config.nodeEnv} mode on port ${config.port}`
-    );
+    bootLog(`http server listening on port ${config.port}`);
+    logger.info(`Server running in ${config.nodeEnv} mode on port ${config.port}`);
   });
 
-  console.log('Starting collector jobs...');
+  server.on('error', (error: Error) => {
+    console.error(`[${bootTs()}] [backend:${process.pid}] server error`, error);
+    logger.error('HTTP server error', error);
+  });
+
+  server.on('close', () => {
+    bootLog('http server close event emitted');
+  });
+
+  bootLog('starting collector jobs');
   startCollectorJobs();
-  console.log('✓ Collector jobs started');
+  bootLog('collector jobs started');
 
   // Graceful shutdown
   const shutdown = (signal: string) => {
+    bootLog(`shutdown requested by ${signal}`);
     logger.info(`${signal} received. Shutting down gracefully...`);
     stopCollectorJobs();
+
+    const forceShutdownTimer = setTimeout(() => {
+      console.error(
+        `[${bootTs()}] [backend:${process.pid}] forced shutdown after timeout`
+      );
+      process.exit(1);
+    }, 10000);
+    forceShutdownTimer.unref();
+
     server.close(() => {
+      clearTimeout(forceShutdownTimer);
+      bootLog('server closed cleanly');
       logger.info('Server closed.');
       process.exit(0);
     });
@@ -33,18 +63,33 @@ try {
 
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('beforeExit', (code) => {
+    bootLog(`beforeExit emitted with code ${code}`);
+  });
+  process.on('exit', (code) => {
+    bootLog(`exit emitted with code ${code}`);
+  });
+  process.on('warning', (warning) => {
+    console.warn(`[${bootTs()}] [backend:${process.pid}] process warning`, warning);
+  });
 
   process.on('unhandledRejection', (reason: unknown) => {
-    console.error('Unhandled Rejection:', reason);
+    console.error(
+      `[${bootTs()}] [backend:${process.pid}] unhandled rejection`,
+      reason
+    );
     logger.error('Unhandled Rejection:', reason);
   });
 
   process.on('uncaughtException', (error: Error) => {
-    console.error('Uncaught Exception:', error);
+    console.error(
+      `[${bootTs()}] [backend:${process.pid}] uncaught exception`,
+      error
+    );
     logger.error('Uncaught Exception:', error);
     process.exit(1);
   });
 } catch (error) {
-  console.error('FATAL ERROR during startup:', error);
+  console.error(`[${bootTs()}] [backend:${process.pid}] fatal startup error`, error);
   process.exit(1);
 }
